@@ -35,8 +35,18 @@ func (user *User) AddNewUser() {
 		user.Names, user.LastNames, user.Phone, user.Email, user.Password)
 }
 
-func GetUser(id int) *Users {
-	rows, err := databasee.ExecuteQuery(`SELECT id,names,last_names,phone,email,password FROM users WHERE id=?`, id)
+func GetUserById(id int) (*Users, error) {
+	return getUserByQuery(`SELECT id,names,last_names,phone,email,password FROM users WHERE id=?`, id)
+}
+
+func GetUserByEmail(email string) (*Users, error) {
+	return getUserByQuery(`SELECT id,names,last_names,phone,email,password FROM users WHERE email=?`, email)
+}
+
+//getUserByQuery es una función que recibe una consulta y una variable para ser reemplazada en la consulta
+//y devuelve una estructura de tipo Users
+func getUserByQuery(query string, args ...interface{}) (*Users, error) {
+	rows, err := databasee.ExecuteQuery(query, args...)
 	if err != nil {
 		fmt.Println("Error in GetUser", err)
 	}
@@ -51,5 +61,6 @@ func GetUser(id int) *Users {
 		*users = append(*users, user)
 
 	}
-	return users
+
+	return users, err
 }

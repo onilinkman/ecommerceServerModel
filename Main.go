@@ -1,20 +1,22 @@
 package main
 
 import (
-	"fmt"
-	"main/databasee"
+	"log"
+	v1 "main/handlers/api/v1"
 	"main/models"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	fmt.Println("Hello World")
-	databasee.CreateConnection()
-	databasee.Ping()
+	createtables()
+	r := mux.NewRouter()
+	r.HandleFunc("/api/v1/users", v1.LoginUser).Methods("POST")
+	/* r.Use(mux.CORSMethodMiddleware(r)) */
+	log.Fatal(http.ListenAndServe(":8000", r))
+}
+
+func createtables() {
 	models.CreateTableUsers()
-	fmt.Println(models.GetUser(1))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello World")
-	})
-	http.ListenAndServe(":8080", nil)
 }

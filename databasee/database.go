@@ -15,6 +15,10 @@ const host string = "192.168.0.128"
 const port int = 3306
 const database string = "ecommerce"
 
+func init() {
+	CreateConnection()
+}
+
 func CreateConnection() {
 	connection, err := sql.Open("mysql", generateURL())
 	if err != nil {
