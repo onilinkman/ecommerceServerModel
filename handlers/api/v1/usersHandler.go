@@ -2,8 +2,8 @@ package v1
 
 import (
 	"encoding/json"
-	"fmt"
 	"main/models"
+	"main/utils"
 	"net/http"
 	"strconv"
 
@@ -19,7 +19,7 @@ func GetUserById(w http.ResponseWriter, r *http.Request) {
 	}
 	users, err := models.GetUserById(userId)
 
-	if err != nil || len(*users) == 0 {
+	if err != nil {
 		models.SendNoContent(w)
 	}
 
@@ -30,7 +30,7 @@ func GetUserByEmail(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	email := vars["email"]
 	users, err := models.GetUserByEmail(email)
-	if err != nil || len(*users) == 0 {
+	if err != nil {
 		models.SendNoContent(w)
 	}
 	models.SendData(w, users)
@@ -41,14 +41,43 @@ type UserLogin struct {
 	Password string `json:"password"`
 }
 
+type Message struct {
+	Message string `json:"message"`
+	State   string `json:"state"`
+}
+
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	user := UserLogin{}
-	fmt.Println(user, r.Body)
+	userLogin := UserLogin{}
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&user); err != nil {
-		models.SendUnprocessableEntity(w)
+	defer r.Body.Close()
+
+	if err := decoder.Decode(&userLogin); err != nil {
+		models.SendLoginFail(w, "Error al leer los Datos")
+		return
 	}
-	models.SendData(w, user)
+
+	user, err := models.GetUserByEmail(userLogin.Email)
+
+	if err != nil {
+		models.SendLoginFail(w, err.Error())
+		return
+	}
+
+	if !user.ComparePassword(userLogin.Password) {
+		models.SendLoginFail(w, "Usuario o Contraseña Incorrectos")
+		return
+	}
+
+	cookie, expire := utils.SetSession(w)
+
+	models.InsertSession(user.Id, cookie, expire)
+
+	models.SendData(w, Message{Message: "Login Exitoso", State: "success"})
+}
+
+func LogoutUser(w http.ResponseWriter, r *http.Request) {
+	cookie := r.Header.Get("Cookie")
+	models.DeleteSession(cookie)
+	models.SendData(w, Message{Message: "Logout Exitoso", State: "success"})
 }

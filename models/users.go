@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"main/databasee"
 )
@@ -35,32 +36,39 @@ func (user *User) AddNewUser() {
 		user.Names, user.LastNames, user.Phone, user.Email, user.Password)
 }
 
-func GetUserById(id int) (*Users, error) {
+func GetUserById(id int) (*User, error) {
 	return getUserByQuery(`SELECT id,names,last_names,phone,email,password FROM users WHERE id=?`, id)
 }
 
-func GetUserByEmail(email string) (*Users, error) {
+func GetUserByEmail(email string) (*User, error) {
 	return getUserByQuery(`SELECT id,names,last_names,phone,email,password FROM users WHERE email=?`, email)
 }
 
 //getUserByQuery es una función que recibe una consulta y una variable para ser reemplazada en la consulta
 //y devuelve una estructura de tipo Users
-func getUserByQuery(query string, args ...interface{}) (*Users, error) {
+func getUserByQuery(query string, args ...interface{}) (*User, error) {
 	rows, err := databasee.ExecuteQuery(query, args...)
 	if err != nil {
 		fmt.Println("Error in GetUser", err)
 	}
 	defer rows.Close()
-	users := &Users{}
-	for rows.Next() {
-		var user User
+	var user = &User{}
+	if rows.Next() {
 		err = rows.Scan(&user.Id, &user.Names, &user.LastNames, &user.Phone, &user.Email, &user.Password)
 		if err != nil {
 			fmt.Println("Error in GetUser to read rows", err)
 		}
-		*users = append(*users, user)
 
+		return user, err
 	}
 
-	return users, err
+	return nil, errors.New("usuario no encontrado")
+}
+
+func (user *User) SetPassword(password string) {
+	user.Password = password
+}
+
+func (user *User) ComparePassword(password string) bool {
+	return user.Password == password
 }

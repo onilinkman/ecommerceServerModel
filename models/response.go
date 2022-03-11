@@ -56,6 +56,17 @@ func (response *Response) NoContent() {
 	response.Message = "No Content"
 }
 
+func SendLoginFail(w http.ResponseWriter, message string) {
+	response := CreateDefaultResponse(w)
+	response.LoginFail(message)
+	response.Send()
+}
+
+func (response *Response) LoginFail(message string) {
+	response.Status = http.StatusUnauthorized
+	response.Message = message
+}
+
 func SendData(w http.ResponseWriter, data interface{}) {
 	response := CreateDefaultResponse(w)
 	response.Data = data
