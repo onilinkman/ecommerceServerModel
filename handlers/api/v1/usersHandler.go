@@ -77,7 +77,26 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
-	cookie := r.Header.Get("Cookie")
-	models.DeleteSession(cookie)
+	cookie, err := r.Cookie("go_session")
+	if err != nil {
+		models.SendData(w, Message{Message: "No hay sesion", State: "error"})
+		return
+	}
+	models.DeleteSession(cookie.Value)
+	utils.DeleteSession(w)
 	models.SendData(w, Message{Message: "Logout Exitoso", State: "success"})
+}
+
+func CheckUser(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("go_session")
+	if err != nil {
+		models.SendLoginFail(w, "No hay sesion")
+		return
+	}
+	user, err := models.GetUserBySession(cookie.Value)
+	if err != nil {
+		models.SendLoginFail(w, err.Error())
+		return
+	}
+	models.SendData(w, user)
 }

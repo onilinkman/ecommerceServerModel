@@ -44,6 +44,11 @@ func GetUserByEmail(email string) (*User, error) {
 	return getUserByQuery(`SELECT id,names,last_names,phone,email,password FROM users WHERE email=?`, email)
 }
 
+func GetUserBySession(cookie string) (*User, error) {
+	return getUserByQuery(`SELECT u.id,u.names,u.last_names,u.phone,u.email,u.password FROM users u
+	INNER JOIN sessions s ON u.id=s.id_user AND s.id_session=?`, cookie)
+}
+
 //getUserByQuery es una función que recibe una consulta y una variable para ser reemplazada en la consulta
 //y devuelve una estructura de tipo Users
 func getUserByQuery(query string, args ...interface{}) (*User, error) {
