@@ -56,6 +56,7 @@ func getUserByQuery(query string, args ...interface{}) (*User, error) {
 	if err != nil {
 		fmt.Println("Error in GetUser", err)
 	}
+
 	defer rows.Close()
 	var user = &User{}
 	if rows.Next() {
